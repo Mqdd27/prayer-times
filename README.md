@@ -19,8 +19,8 @@
 - **Next prayer in the menu bar.** For example `☀ Dhuhr 11:38`. The icon changes with the time of day and can be hidden.
 - **Today's schedule in one click.** Shows Fajr, Dhuhr, Asr, Maghrib and Isha, with the next one highlighted.
 - **Automatic or manual location.** GPS follows you when you travel. Or search any city in the world; results load as you type.
-- **Notifications.** A banner and sound at each prayer time.
-- **Small and light.** .
+- **Notifications.** A banner and sound at each prayer time, for the location you have selected.
+- **Small and light.** About 800 KB, a single Swift file, no dependencies. Uses almost no CPU or memory.
 - **Native.** Light and dark mode, VoiceOver labels, full keyboard control (↑ ↓ Return, ⌘Q), and an option to open at login.
 
 ## Install
@@ -57,6 +57,8 @@ open /Applications/PrayerTimes.app
 | Change location | Click **Location:** and type a city name. ↑ ↓ to move, Return to pick |
 | Back to GPS | Choose **Automatic (GPS)** at the top of the list |
 | Recent cities | Your last 8 picks appear when the search field is empty, and work offline |
+| Remove a recent city | Hover it and click ✕, right-click → **Remove from History**, or highlight it and press ⌘⌫ |
+| Clear all recent cities | Click **Clear History** below the list |
 | Quit | **Quit** in the panel, or ⌘Q |
 
 ## How times are calculated
