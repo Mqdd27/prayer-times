@@ -1,21 +1,33 @@
-# Push a version tag to publish a release:  git tag v1.0.0 && git push origin v1.0.0
+# Every push to master publishes a release with the patch version bumped (v1.0.2 → v1.0.3).
+# Docs, images and workflow-only changes are skipped.
 name: Release
 
 on:
   push:
-    tags: ["v*"]
+    branches: [master]
+    paths-ignore: ["**.md", "assets/**", ".github/**"]
 
 permissions:
-  contents: write  # create the GitHub Release and upload the dmg
+  contents: write  # create the GitHub Release, its tag, and upload the dmg
+
+concurrency: release  # two quick pushes must not compute the same version
 
 jobs:
   release:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needs the existing tags
+
+      - name: Next version
+        run: |
+          last=$(git tag -l 'v*' --sort=-v:refname | head -1)
+          last=${last:-v1.0.0}
+          echo "TAG=${last%.*}.$(( ${last##*.} + 1 ))" >> "$GITHUB_ENV"
 
       - name: Build universal app
-        run: VERSION="${GITHUB_REF_NAME#v}" ./build.sh
+        run: VERSION="${TAG#v}" ./build.sh
 
       - name: Package DMG
         # App + Applications shortcut, so users install by dragging one onto the other
@@ -23,12 +35,13 @@ jobs:
           mkdir -p build/dmg
           cp -R build/PrayerTimes.app build/dmg/
           ln -s /Applications build/dmg/Applications
-          hdiutil create -volname "Prayer Times" -srcfolder build/dmg -format UDZO -fs HFS+ -ov "PrayerTimes-${GITHUB_REF_NAME}.dmg"
+          hdiutil create -volname "Prayer Times" -srcfolder build/dmg -format UDZO -fs HFS+ -ov "PrayerTimes-${TAG}.dmg"
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "PrayerTimes-${GITHUB_REF_NAME}.dmg" \
-            --title "Prayer Times ${GITHUB_REF_NAME}" \
+          gh release create "$TAG" "PrayerTimes-${TAG}.dmg" \
+            --target "$GITHUB_SHA" \
+            --title "Prayer Times ${TAG}" \
             --generate-notes

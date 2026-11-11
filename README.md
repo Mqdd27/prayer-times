@@ -87,7 +87,7 @@ A 2-minute safety margin (*ihtiyat*) is added to each time. At high latitudes, w
 |---|---|
 | `PrayerTimes.swift` | The whole app: calculation, location, notifications and UI |
 | `build.sh` | Compiles a universal binary and packages `build/PrayerTimes.app` |
-| `.github/workflows/release.yml` | Builds and publishes a GitHub Release when a `v*` tag is pushed |
+| `.github/workflows/release.yml` | Publishes a GitHub Release (next patch version) on every push to `master` that changes the app |
 | `make-icon.swift` | Renders `AppIcon.icns` from an illustration |
 | `AppIcon.icns` | App icon |
 | `assets/` | Images used by this README |
