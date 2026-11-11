@@ -6,7 +6,7 @@ import ServiceManagement
 
 // MARK: - Prayer time calculation (Kemenag RI: Fajr 20°, Isya 18°, Ashar Syafi'i, +2 min ihtiyat)
 
-struct City: Hashable { let name: String; let lat: Double; let lng: Double; let tz: String }
+struct City: Hashable { let name: String; let lat: Double; let lng: Double; let tz: String; var country = "" }
 
 enum Prayer: String, CaseIterable {
     case shubuh = "Fajr", dhuhur = "Dhuhr", ashar = "Asr", maghrib = "Maghrib", isya = "Isha"
@@ -65,40 +65,111 @@ func prayerTimes(lat: Double, lng: Double, tz: TimeZone, day: Date) -> [(Prayer,
 
 // MARK: - Cities
 
-let cities: [City] = [
-    ("Banda Aceh", 5.55, 95.32, "Asia/Jakarta"), ("Medan", 3.59, 98.67, "Asia/Jakarta"),
-    ("Padang", -0.95, 100.35, "Asia/Jakarta"), ("Pekanbaru", 0.51, 101.45, "Asia/Jakarta"),
-    ("Batam", 1.13, 104.05, "Asia/Jakarta"), ("Tanjung Pinang", 0.92, 104.45, "Asia/Jakarta"),
-    ("Jambi", -1.61, 103.61, "Asia/Jakarta"), ("Palembang", -2.99, 104.76, "Asia/Jakarta"),
-    ("Bengkulu", -3.80, 102.27, "Asia/Jakarta"), ("Pangkal Pinang", -2.13, 106.11, "Asia/Jakarta"),
-    ("Bandar Lampung", -5.43, 105.26, "Asia/Jakarta"), ("Serang", -6.12, 106.15, "Asia/Jakarta"),
-    ("Tangerang", -6.18, 106.63, "Asia/Jakarta"), ("Jakarta", -6.21, 106.85, "Asia/Jakarta"),
-    ("Depok", -6.40, 106.82, "Asia/Jakarta"), ("Bekasi", -6.24, 107.00, "Asia/Jakarta"),
-    ("Bogor", -6.60, 106.80, "Asia/Jakarta"), ("Bandung", -6.91, 107.61, "Asia/Jakarta"),
-    ("Cirebon", -6.73, 108.55, "Asia/Jakarta"), ("Tasikmalaya", -7.33, 108.22, "Asia/Jakarta"),
-    ("Semarang", -6.97, 110.42, "Asia/Jakarta"), ("Solo", -7.57, 110.82, "Asia/Jakarta"),
-    ("Yogyakarta", -7.80, 110.36, "Asia/Jakarta"), ("Purwokerto", -7.42, 109.23, "Asia/Jakarta"),
-    ("Surabaya", -7.25, 112.75, "Asia/Jakarta"), ("Malang", -7.98, 112.63, "Asia/Jakarta"),
-    ("Kediri", -7.82, 112.01, "Asia/Jakarta"), ("Jember", -8.17, 113.70, "Asia/Jakarta"),
-    ("Pontianak", -0.03, 109.33, "Asia/Pontianak"), ("Palangka Raya", -2.21, 113.92, "Asia/Pontianak"),
-    ("Denpasar", -8.65, 115.22, "Asia/Makassar"), ("Mataram", -8.58, 116.12, "Asia/Makassar"),
-    ("Kupang", -10.18, 123.61, "Asia/Makassar"), ("Banjarmasin", -3.32, 114.59, "Asia/Makassar"),
-    ("Balikpapan", -1.27, 116.83, "Asia/Makassar"), ("Samarinda", -0.50, 117.15, "Asia/Makassar"),
-    ("Tanjung Selor", 2.84, 117.37, "Asia/Makassar"), ("Makassar", -5.15, 119.43, "Asia/Makassar"),
-    ("Palu", -0.90, 119.87, "Asia/Makassar"), ("Kendari", -3.97, 122.51, "Asia/Makassar"),
-    ("Gorontalo", 0.54, 123.06, "Asia/Makassar"), ("Manado", 1.47, 124.84, "Asia/Makassar"),
-    ("Mamuju", -2.68, 118.89, "Asia/Makassar"), ("Ambon", -3.70, 128.18, "Asia/Jayapura"),
-    ("Ternate", 0.79, 127.38, "Asia/Jayapura"), ("Sorong", -0.88, 131.26, "Asia/Jayapura"),
-    ("Manokwari", -0.86, 134.06, "Asia/Jayapura"), ("Jayapura", -2.53, 140.72, "Asia/Jayapura"),
-    ("Merauke", -8.49, 140.40, "Asia/Jayapura"),
-    ("Kuala Lumpur", 3.14, 101.69, "Asia/Kuala_Lumpur"), ("Singapore", 1.35, 103.82, "Asia/Singapore"),
-    ("Bandar Seri Begawan", 4.90, 114.94, "Asia/Brunei"), ("Makkah", 21.42, 39.83, "Asia/Riyadh"),
-    ("Madinah", 24.47, 39.61, "Asia/Riyadh"), ("Istanbul", 41.01, 28.98, "Europe/Istanbul"),
-    ("Cairo", 30.04, 31.24, "Africa/Cairo"), ("Dubai", 25.20, 55.27, "Asia/Dubai"),
-    ("Tokyo", 35.68, 139.69, "Asia/Tokyo"), ("Sydney", -33.87, 151.21, "Australia/Sydney"),
-    ("London", 51.51, -0.13, "Europe/London"), ("Amsterdam", 52.37, 4.90, "Europe/Amsterdam"),
-    ("New York", 40.71, -74.01, "America/New_York"),
-].map { City(name: $0.0, lat: $0.1, lng: $0.2, tz: $0.3) }
+let cities: [City] = ([
+    ("Banda Aceh", "Indonesia", 5.55, 95.32, "Asia/Jakarta"), ("Medan", "Indonesia", 3.59, 98.67, "Asia/Jakarta"),
+    ("Padang", "Indonesia", -0.95, 100.35, "Asia/Jakarta"), ("Pekanbaru", "Indonesia", 0.51, 101.45, "Asia/Jakarta"),
+    ("Batam", "Indonesia", 1.13, 104.05, "Asia/Jakarta"), ("Tanjung Pinang", "Indonesia", 0.92, 104.45, "Asia/Jakarta"),
+    ("Jambi", "Indonesia", -1.61, 103.61, "Asia/Jakarta"), ("Palembang", "Indonesia", -2.99, 104.76, "Asia/Jakarta"),
+    ("Bengkulu", "Indonesia", -3.8, 102.27, "Asia/Jakarta"), ("Pangkal Pinang", "Indonesia", -2.13, 106.11, "Asia/Jakarta"),
+    ("Bandar Lampung", "Indonesia", -5.43, 105.26, "Asia/Jakarta"), ("Serang", "Indonesia", -6.12, 106.15, "Asia/Jakarta"),
+    ("Tangerang", "Indonesia", -6.18, 106.63, "Asia/Jakarta"), ("Jakarta", "Indonesia", -6.21, 106.85, "Asia/Jakarta"),
+    ("Depok", "Indonesia", -6.4, 106.82, "Asia/Jakarta"), ("Bekasi", "Indonesia", -6.24, 107.0, "Asia/Jakarta"),
+    ("Bogor", "Indonesia", -6.6, 106.8, "Asia/Jakarta"), ("Bandung", "Indonesia", -6.91, 107.61, "Asia/Jakarta"),
+    ("Cirebon", "Indonesia", -6.73, 108.55, "Asia/Jakarta"), ("Tasikmalaya", "Indonesia", -7.33, 108.22, "Asia/Jakarta"),
+    ("Semarang", "Indonesia", -6.97, 110.42, "Asia/Jakarta"), ("Solo", "Indonesia", -7.57, 110.82, "Asia/Jakarta"),
+    ("Yogyakarta", "Indonesia", -7.8, 110.36, "Asia/Jakarta"), ("Purwokerto", "Indonesia", -7.42, 109.23, "Asia/Jakarta"),
+    ("Surabaya", "Indonesia", -7.25, 112.75, "Asia/Jakarta"), ("Malang", "Indonesia", -7.98, 112.63, "Asia/Jakarta"),
+    ("Kediri", "Indonesia", -7.82, 112.01, "Asia/Jakarta"), ("Jember", "Indonesia", -8.17, 113.7, "Asia/Jakarta"),
+    ("Pontianak", "Indonesia", -0.03, 109.33, "Asia/Pontianak"), ("Palangka Raya", "Indonesia", -2.21, 113.92, "Asia/Pontianak"),
+    ("Denpasar", "Indonesia", -8.65, 115.22, "Asia/Makassar"), ("Mataram", "Indonesia", -8.58, 116.12, "Asia/Makassar"),
+    ("Kupang", "Indonesia", -10.18, 123.61, "Asia/Makassar"), ("Banjarmasin", "Indonesia", -3.32, 114.59, "Asia/Makassar"),
+    ("Balikpapan", "Indonesia", -1.27, 116.83, "Asia/Makassar"), ("Samarinda", "Indonesia", -0.5, 117.15, "Asia/Makassar"),
+    ("Tanjung Selor", "Indonesia", 2.84, 117.37, "Asia/Makassar"), ("Makassar", "Indonesia", -5.15, 119.43, "Asia/Makassar"),
+    ("Palu", "Indonesia", -0.9, 119.87, "Asia/Makassar"), ("Kendari", "Indonesia", -3.97, 122.51, "Asia/Makassar"),
+    ("Gorontalo", "Indonesia", 0.54, 123.06, "Asia/Makassar"), ("Manado", "Indonesia", 1.47, 124.84, "Asia/Makassar"),
+    ("Mamuju", "Indonesia", -2.68, 118.89, "Asia/Makassar"), ("Ambon", "Indonesia", -3.7, 128.18, "Asia/Jayapura"),
+    ("Ternate", "Indonesia", 0.79, 127.38, "Asia/Jayapura"), ("Sorong", "Indonesia", -0.88, 131.26, "Asia/Jayapura"),
+    ("Manokwari", "Indonesia", -0.86, 134.06, "Asia/Jayapura"), ("Jayapura", "Indonesia", -2.53, 140.72, "Asia/Jayapura"),
+    ("Merauke", "Indonesia", -8.49, 140.4, "Asia/Jayapura"), ("Kuala Lumpur", "Malaysia", 3.14, 101.69, "Asia/Kuala_Lumpur"),
+    ("Johor Bahru", "Malaysia", 1.49, 103.74, "Asia/Kuala_Lumpur"), ("George Town", "Malaysia", 5.41, 100.33, "Asia/Kuala_Lumpur"),
+    ("Kota Kinabalu", "Malaysia", 5.98, 116.07, "Asia/Kuching"), ("Kuching", "Malaysia", 1.55, 110.34, "Asia/Kuching"),
+    ("Singapore", "Singapore", 1.35, 103.82, "Asia/Singapore"), ("Bandar Seri Begawan", "Brunei", 4.9, 114.94, "Asia/Brunei"),
+    ("Bangkok", "Thailand", 13.76, 100.5, "Asia/Bangkok"), ("Pattani", "Thailand", 6.87, 101.25, "Asia/Bangkok"),
+    ("Manila", "Philippines", 14.6, 120.98, "Asia/Manila"), ("Davao", "Philippines", 7.19, 125.46, "Asia/Manila"),
+    ("Ho Chi Minh City", "Vietnam", 10.82, 106.63, "Asia/Ho_Chi_Minh"), ("Hanoi", "Vietnam", 21.03, 105.85, "Asia/Ho_Chi_Minh"),
+    ("Phnom Penh", "Cambodia", 11.56, 104.92, "Asia/Phnom_Penh"), ("Yangon", "Myanmar", 16.84, 96.17, "Asia/Yangon"),
+    ("Dhaka", "Bangladesh", 23.81, 90.41, "Asia/Dhaka"), ("Chittagong", "Bangladesh", 22.36, 91.78, "Asia/Dhaka"),
+    ("New Delhi", "India", 28.61, 77.21, "Asia/Kolkata"), ("Mumbai", "India", 19.08, 72.88, "Asia/Kolkata"),
+    ("Hyderabad", "India", 17.39, 78.49, "Asia/Kolkata"), ("Kolkata", "India", 22.57, 88.36, "Asia/Kolkata"),
+    ("Bengaluru", "India", 12.97, 77.59, "Asia/Kolkata"), ("Chennai", "India", 13.08, 80.27, "Asia/Kolkata"),
+    ("Srinagar", "India", 34.08, 74.8, "Asia/Kolkata"), ("Karachi", "Pakistan", 24.86, 67.01, "Asia/Karachi"),
+    ("Lahore", "Pakistan", 31.55, 74.34, "Asia/Karachi"), ("Islamabad", "Pakistan", 33.68, 73.05, "Asia/Karachi"),
+    ("Peshawar", "Pakistan", 34.01, 71.58, "Asia/Karachi"), ("Kabul", "Afghanistan", 34.56, 69.21, "Asia/Kabul"),
+    ("Colombo", "Sri Lanka", 6.93, 79.86, "Asia/Colombo"), ("Malé", "Maldives", 4.18, 73.51, "Indian/Maldives"),
+    ("Kathmandu", "Nepal", 27.72, 85.32, "Asia/Kathmandu"), ("Tashkent", "Uzbekistan", 41.3, 69.24, "Asia/Tashkent"),
+    ("Samarkand", "Uzbekistan", 39.65, 66.96, "Asia/Samarkand"), ("Almaty", "Kazakhstan", 43.24, 76.89, "Asia/Almaty"),
+    ("Astana", "Kazakhstan", 51.17, 71.45, "Asia/Almaty"), ("Bishkek", "Kyrgyzstan", 42.87, 74.59, "Asia/Bishkek"),
+    ("Dushanbe", "Tajikistan", 38.56, 68.77, "Asia/Dushanbe"), ("Ashgabat", "Turkmenistan", 37.96, 58.33, "Asia/Ashgabat"),
+    ("Baku", "Azerbaijan", 40.41, 49.87, "Asia/Baku"), ("Beijing", "China", 39.9, 116.41, "Asia/Shanghai"),
+    ("Shanghai", "China", 31.23, 121.47, "Asia/Shanghai"), ("Guangzhou", "China", 23.13, 113.26, "Asia/Shanghai"),
+    ("Urumqi", "China", 43.83, 87.62, "Asia/Shanghai"), ("Hong Kong", "China", 22.32, 114.17, "Asia/Hong_Kong"),
+    ("Taipei", "Taiwan", 25.03, 121.57, "Asia/Taipei"), ("Tokyo", "Japan", 35.68, 139.69, "Asia/Tokyo"),
+    ("Osaka", "Japan", 34.69, 135.5, "Asia/Tokyo"), ("Seoul", "South Korea", 37.57, 126.98, "Asia/Seoul"),
+    ("Makkah", "Saudi Arabia", 21.42, 39.83, "Asia/Riyadh"), ("Madinah", "Saudi Arabia", 24.47, 39.61, "Asia/Riyadh"),
+    ("Riyadh", "Saudi Arabia", 24.71, 46.68, "Asia/Riyadh"), ("Jeddah", "Saudi Arabia", 21.49, 39.19, "Asia/Riyadh"),
+    ("Dammam", "Saudi Arabia", 26.43, 50.1, "Asia/Riyadh"), ("Dubai", "United Arab Emirates", 25.2, 55.27, "Asia/Dubai"),
+    ("Abu Dhabi", "United Arab Emirates", 24.45, 54.38, "Asia/Dubai"), ("Sharjah", "United Arab Emirates", 25.35, 55.42, "Asia/Dubai"),
+    ("Doha", "Qatar", 25.29, 51.53, "Asia/Qatar"), ("Manama", "Bahrain", 26.23, 50.59, "Asia/Bahrain"),
+    ("Kuwait City", "Kuwait", 29.38, 47.99, "Asia/Kuwait"), ("Muscat", "Oman", 23.59, 58.41, "Asia/Muscat"),
+    ("Sanaa", "Yemen", 15.37, 44.19, "Asia/Aden"), ("Aden", "Yemen", 12.79, 45.02, "Asia/Aden"),
+    ("Amman", "Jordan", 31.95, 35.93, "Asia/Amman"), ("Jerusalem", "Palestine", 31.78, 35.23, "Asia/Jerusalem"),
+    ("Gaza", "Palestine", 31.5, 34.47, "Asia/Gaza"), ("Beirut", "Lebanon", 33.89, 35.5, "Asia/Beirut"),
+    ("Damascus", "Syria", 33.51, 36.28, "Asia/Damascus"), ("Aleppo", "Syria", 36.2, 37.13, "Asia/Damascus"),
+    ("Baghdad", "Iraq", 33.31, 44.36, "Asia/Baghdad"), ("Erbil", "Iraq", 36.19, 44.01, "Asia/Baghdad"),
+    ("Tehran", "Iran", 35.69, 51.39, "Asia/Tehran"), ("Mashhad", "Iran", 36.3, 59.61, "Asia/Tehran"),
+    ("Istanbul", "Türkiye", 41.01, 28.98, "Europe/Istanbul"), ("Ankara", "Türkiye", 39.93, 32.86, "Europe/Istanbul"),
+    ("Cairo", "Egypt", 30.04, 31.24, "Africa/Cairo"), ("Alexandria", "Egypt", 31.2, 29.92, "Africa/Cairo"),
+    ("Khartoum", "Sudan", 15.5, 32.56, "Africa/Khartoum"), ("Tripoli", "Libya", 32.89, 13.19, "Africa/Tripoli"),
+    ("Tunis", "Tunisia", 36.81, 10.18, "Africa/Tunis"), ("Algiers", "Algeria", 36.75, 3.06, "Africa/Algiers"),
+    ("Casablanca", "Morocco", 33.57, -7.59, "Africa/Casablanca"), ("Rabat", "Morocco", 34.02, -6.84, "Africa/Casablanca"),
+    ("Marrakesh", "Morocco", 31.63, -8.01, "Africa/Casablanca"), ("Nouakchott", "Mauritania", 18.09, -15.98, "Africa/Nouakchott"),
+    ("Dakar", "Senegal", 14.72, -17.47, "Africa/Dakar"), ("Bamako", "Mali", 12.64, -8.0, "Africa/Bamako"),
+    ("Niamey", "Niger", 13.51, 2.11, "Africa/Niamey"), ("Lagos", "Nigeria", 6.52, 3.38, "Africa/Lagos"),
+    ("Abuja", "Nigeria", 9.08, 7.4, "Africa/Lagos"), ("Kano", "Nigeria", 12.0, 8.59, "Africa/Lagos"),
+    ("Accra", "Ghana", 5.6, -0.19, "Africa/Accra"), ("Addis Ababa", "Ethiopia", 9.03, 38.74, "Africa/Addis_Ababa"),
+    ("Mogadishu", "Somalia", 2.05, 45.32, "Africa/Mogadishu"), ("Djibouti", "Djibouti", 11.59, 43.15, "Africa/Djibouti"),
+    ("Nairobi", "Kenya", -1.29, 36.82, "Africa/Nairobi"), ("Mombasa", "Kenya", -4.04, 39.67, "Africa/Nairobi"),
+    ("Dar es Salaam", "Tanzania", -6.79, 39.21, "Africa/Dar_es_Salaam"), ("Zanzibar", "Tanzania", -6.17, 39.2, "Africa/Dar_es_Salaam"),
+    ("Johannesburg", "South Africa", -26.2, 28.05, "Africa/Johannesburg"), ("Cape Town", "South Africa", -33.92, 18.42, "Africa/Johannesburg"),
+    ("London", "United Kingdom", 51.51, -0.13, "Europe/London"), ("Birmingham", "United Kingdom", 52.49, -1.89, "Europe/London"),
+    ("Manchester", "United Kingdom", 53.48, -2.24, "Europe/London"), ("Dublin", "Ireland", 53.35, -6.26, "Europe/Dublin"),
+    ("Paris", "France", 48.86, 2.35, "Europe/Paris"), ("Marseille", "France", 43.3, 5.37, "Europe/Paris"),
+    ("Brussels", "Belgium", 50.85, 4.35, "Europe/Brussels"), ("Amsterdam", "Netherlands", 52.37, 4.9, "Europe/Amsterdam"),
+    ("Rotterdam", "Netherlands", 51.92, 4.48, "Europe/Amsterdam"), ("Berlin", "Germany", 52.52, 13.4, "Europe/Berlin"),
+    ("Frankfurt", "Germany", 50.11, 8.68, "Europe/Berlin"), ("Munich", "Germany", 48.14, 11.58, "Europe/Berlin"),
+    ("Zurich", "Switzerland", 47.38, 8.54, "Europe/Zurich"), ("Vienna", "Austria", 48.21, 16.37, "Europe/Vienna"),
+    ("Madrid", "Spain", 40.42, -3.7, "Europe/Madrid"), ("Barcelona", "Spain", 41.39, 2.17, "Europe/Madrid"),
+    ("Lisbon", "Portugal", 38.72, -9.14, "Europe/Lisbon"), ("Rome", "Italy", 41.9, 12.5, "Europe/Rome"),
+    ("Milan", "Italy", 45.46, 9.19, "Europe/Rome"), ("Athens", "Greece", 37.98, 23.73, "Europe/Athens"),
+    ("Sarajevo", "Bosnia and Herzegovina", 43.86, 18.41, "Europe/Sarajevo"), ("Tirana", "Albania", 41.33, 19.82, "Europe/Tirane"),
+    ("Pristina", "Kosovo", 42.66, 21.17, "Europe/Belgrade"), ("Warsaw", "Poland", 52.23, 21.01, "Europe/Warsaw"),
+    ("Copenhagen", "Denmark", 55.68, 12.57, "Europe/Copenhagen"), ("Stockholm", "Sweden", 59.33, 18.07, "Europe/Stockholm"),
+    ("Oslo", "Norway", 59.91, 10.75, "Europe/Oslo"), ("Helsinki", "Finland", 60.17, 24.94, "Europe/Helsinki"),
+    ("Moscow", "Russia", 55.76, 37.62, "Europe/Moscow"), ("Kazan", "Russia", 55.8, 49.11, "Europe/Moscow"),
+    ("Grozny", "Russia", 43.32, 45.69, "Europe/Moscow"), ("New York", "United States", 40.71, -74.01, "America/New_York"),
+    ("Washington, D.C.", "United States", 38.91, -77.04, "America/New_York"), ("Detroit", "United States", 42.33, -83.05, "America/Detroit"),
+    ("Chicago", "United States", 41.88, -87.63, "America/Chicago"), ("Houston", "United States", 29.76, -95.37, "America/Chicago"),
+    ("Dallas", "United States", 32.78, -96.8, "America/Chicago"), ("Los Angeles", "United States", 34.05, -118.24, "America/Los_Angeles"),
+    ("San Francisco", "United States", 37.77, -122.42, "America/Los_Angeles"), ("Seattle", "United States", 47.61, -122.33, "America/Los_Angeles"),
+    ("Toronto", "Canada", 43.65, -79.38, "America/Toronto"), ("Montreal", "Canada", 45.5, -73.57, "America/Toronto"),
+    ("Vancouver", "Canada", 49.28, -123.12, "America/Vancouver"), ("Mexico City", "Mexico", 19.43, -99.13, "America/Mexico_City"),
+    ("São Paulo", "Brazil", -23.55, -46.63, "America/Sao_Paulo"), ("Buenos Aires", "Argentina", -34.6, -58.38, "America/Argentina/Buenos_Aires"),
+    ("Sydney", "Australia", -33.87, 151.21, "Australia/Sydney"), ("Melbourne", "Australia", -37.81, 144.96, "Australia/Melbourne"),
+    ("Brisbane", "Australia", -27.47, 153.03, "Australia/Brisbane"), ("Perth", "Australia", -31.95, 115.86, "Australia/Perth"),
+    ("Auckland", "New Zealand", -36.85, 174.76, "Pacific/Auckland"),
+] as [(String, String, Double, Double, String)])
+    .map { City(name: $0.0, lat: $0.2, lng: $0.3, tz: $0.4, country: $0.1) }
+    .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
 
 // MARK: - State
 
@@ -227,8 +298,10 @@ final class Model: NSObject, ObservableObject, CLLocationManagerDelegate, MKLoca
     var isAuto: Bool { savedCity.isEmpty }
 
     var options: [Option] {
-        let matches = query.isEmpty ? cities : cities.filter { $0.name.localizedCaseInsensitiveContains(query) }
-        return (query.isEmpty ? [.auto] : []) + matches.map(Option.city) + results.map(Option.remote)
+        let matches = query.isEmpty ? cities : cities.filter { $0.name.localizedCaseInsensitiveContains(query) || $0.country.localizedCaseInsensitiveContains(query) }
+        let known = Set(matches.map(\.name))
+        let remote = results.filter { !known.contains($0.title) }  // skip online duplicates of built-in cities
+        return (query.isEmpty ? [.auto] : []) + matches.map(Option.city) + remote.map(Option.remote)
     }
 
     func choose(_ o: Option) {
@@ -440,7 +513,7 @@ struct Panel: View {
     var picker: some View {
         let options = model.options
         return VStack(spacing: 6) {
-            TextField("Search city…", text: $model.query)
+            TextField("Search city or country…", text: $model.query)
                 .textFieldStyle(.roundedBorder)
                 .onSubmit { if options.indices.contains(model.highlighted) { model.choose(options[model.highlighted]) } }
                 .onKeyPress(.downArrow) { model.moveHighlight(1); return .handled }
@@ -472,16 +545,17 @@ struct Panel: View {
     }
 
     func row(_ o: Option, highlighted: Bool) -> some View {
-        let (title, icon, selected): (String, String, Bool) = switch o {
-        case .auto: ("Automatic (GPS)", "location.fill", model.isAuto)
-        case .city(let c): (c.name, "mappin", !model.isAuto && model.location.name == c.name)
-        case .remote(let r): ([r.title, r.subtitle].filter { !$0.isEmpty }.joined(separator: ", "), "globe", false)
+        let (title, subtitle, icon, selected): (String, String, String, Bool) = switch o {
+        case .auto: ("Automatic (GPS)", "", "location.fill", model.isAuto)
+        case .city(let c): (c.name, c.country, "mappin", !model.isAuto && model.location.name == c.name)
+        case .remote(let r): (r.title, r.subtitle, "globe", false)
         }
         return Button { model.choose(o) } label: {
             HStack {
                 Image(systemName: icon).font(.caption).frame(width: 16)
-                Text(title).lineLimit(1)
-                Spacer()
+                Text(title).lineLimit(1).layoutPriority(1)
+                Text(subtitle).lineLimit(1).foregroundStyle(.secondary)
+                Spacer(minLength: 0)
                 if case .remote(let r) = o, model.resolving == r { ProgressView().controlSize(.small) }
                 if selected { Image(systemName: "checkmark").font(.caption) }
             }
@@ -490,9 +564,9 @@ struct Panel: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(title)
+        .help(subtitle.isEmpty ? title : "\(title), \(subtitle)")
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(title)
+        .accessibilityLabel(subtitle.isEmpty ? title : "\(title), \(subtitle)")
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 }
