@@ -27,8 +27,8 @@
 
 Requires macOS 14 or later.
 
-1. Download `PrayerTimes-vX.Y.Z.zip` from the [latest release](https://github.com/Mqdd27/prayer-times/releases/latest).
-2. Unzip it and move **PrayerTimes.app** to **Applications**.
+1. Download `PrayerTimes-vX.Y.Z.dmg` from the [latest release](https://github.com/Mqdd27/prayer-times/releases/latest).
+2. Open the DMG and drag **PrayerTimes** onto the **Applications** shortcut.
 3. The app is not notarized, so macOS blocks the first launch. Remove the download flag once:
 
    ```sh
@@ -47,15 +47,6 @@ Requires the Xcode Command Line Tools (`xcode-select --install`).
 ./build.sh
 cp -R build/PrayerTimes.app /Applications/
 open /Applications/PrayerTimes.app
-```
-
-### Publishing a release
-
-Push a version tag. GitHub Actions builds the universal app and attaches the zip to a new release:
-
-```sh
-git tag v1.0.0
-git push origin v1.0.0
 ```
 
 ## Usage
