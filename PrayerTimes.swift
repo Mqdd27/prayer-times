@@ -369,6 +369,11 @@ func openSettings(_ pane: String) {
     NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:\(pane)")!)
 }
 
+/// `defaults write -g NSConvolutionOverride1 -float N` sets a custom window corner radius.
+/// Row highlights never get rounder than it; unset (the default) keeps their normal radius.
+/// ponytail: the menu bar panel's own frame is SwiftUI glass and ignores the override.
+let cornerOverride: CGFloat? = (UserDefaults.standard.object(forKey: "NSConvolutionOverride1") as? NSNumber).map { CGFloat($0.doubleValue) }
+
 struct Panel: View {
     @ObservedObject var model: Model
     @AppStorage("showIcon") var showIcon = true
@@ -455,7 +460,7 @@ struct Panel: View {
                     Text(time).font(.title2.monospacedDigit().weight(.semibold))
                 }
                 .padding(.horizontal, 8).padding(.vertical, 4)
-                .background(p == next ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 6))
+                .background(p == next ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: min(6, cornerOverride ?? 6)))
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(p.rawValue), \(time)")
                 .accessibilityValue(p == next ? "Next prayer" : "")
@@ -546,7 +551,7 @@ struct Panel: View {
             }
         }
         .padding(.vertical, 5).padding(.horizontal, 6)
-        .background(highlighted ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 5))
+        .background(highlighted ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: min(5, cornerOverride ?? 5)))
         .contextMenu {
             if let recent { Button("Remove from History") { model.removeRecent(recent) } }
         }
