@@ -25,7 +25,23 @@
 
 ## Install
 
-Requires macOS 14 or later and the Xcode Command Line Tools (`xcode-select --install`).
+Requires macOS 14 or later.
+
+1. Download `PrayerTimes-vX.Y.Z.zip` from the [latest release](https://github.com/Mqdd27/prayer-times/releases/latest).
+2. Unzip it and move **PrayerTimes.app** to **Applications**.
+3. The app is not notarized, so macOS blocks the first launch. Remove the download flag once:
+
+   ```sh
+   xattr -dr com.apple.quarantine /Applications/PrayerTimes.app
+   ```
+
+   Or open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
+
+On first launch, allow **Location** (for automatic mode) and **Notifications**. If you miss either prompt, the panel shows a link straight to the right System Settings page.
+
+### Build from source
+
+Requires the Xcode Command Line Tools (`xcode-select --install`).
 
 ```sh
 ./build.sh
@@ -33,9 +49,14 @@ cp -R build/PrayerTimes.app /Applications/
 open /Applications/PrayerTimes.app
 ```
 
-On first launch, allow **Location** (for automatic mode) and **Notifications**. If you miss either prompt, the panel shows a link straight to the right System Settings page.
+### Publishing a release
 
-> The app is ad-hoc signed, not notarized. If macOS blocks it, right-click the app in Finder and choose **Open**.
+Push a version tag. GitHub Actions builds the universal app and attaches the zip to a new release:
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
 
 ## Usage
 
@@ -73,6 +94,7 @@ A 2-minute safety margin (*ihtiyat*) is added to each time. At high latitudes, w
 |---|---|
 | `PrayerTimes.swift` | The whole app: calculation, location, notifications and UI |
 | `build.sh` | Compiles a universal binary and packages `build/PrayerTimes.app` |
+| `.github/workflows/release.yml` | Builds and publishes a GitHub Release when a `v*` tag is pushed |
 | `make-icon.swift` | Renders `AppIcon.icns` from an illustration |
 | `AppIcon.icns` | App icon |
 | `assets/` | Images used by this README |
