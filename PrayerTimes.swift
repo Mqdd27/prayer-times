@@ -70,7 +70,11 @@ func prayerTimes(lat: Double, lng: Double, tz: TimeZone, day: Date) -> [(Prayer,
         (.maghrib, sunset),
         (.isya, isha),
     ]
-    return hours.map { ($0.0, midnightUTC.addingTimeInterval(($0.1 + 2.0 / 60) * 3600)) }
+    // Whole minutes (as displayed), so the menu bar, "next" and the notification all flip together
+    return hours.map { p, h in
+        let t = midnightUTC.addingTimeInterval((h + 2.0 / 60) * 3600).timeIntervalSince1970
+        return (p, Date(timeIntervalSince1970: (t / 60).rounded(.down) * 60))
+    }
 }
 
 // MARK: - State
@@ -92,11 +96,9 @@ final class Model: NSObject, ObservableObject, CLLocationManagerDelegate, UNUser
     @Published var recents = (UserDefaults.standard.stringArray(forKey: "recents") ?? []).compactMap(City.init(encoded:)) {
         didSet { UserDefaults.standard.set(recents.map(\.encoded), forKey: "recents") }
     }
-    @Published var location = City(name: "Locating…", lat: -6.21, lng: 106.85, tz: TimeZone.current.identifier) {
-        didSet { scheduleNotifications() }
-    }
+    @Published var location = City(name: "Locating…", lat: -6.21, lng: 106.85, tz: TimeZone.current.identifier)
     @Published var notify = UserDefaults.standard.object(forKey: "notify") as? Bool ?? true {
-        didSet { UserDefaults.standard.set(notify, forKey: "notify"); scheduleNotifications() }
+        didSet { UserDefaults.standard.set(notify, forKey: "notify") }
     }
     @Published var openAtLogin = SMAppService.mainApp.status == .enabled
     @Published var now = Date()
@@ -109,7 +111,8 @@ final class Model: NSObject, ObservableObject, CLLocationManagerDelegate, UNUser
     @Published var notificationsDenied = false
     @Published var loginNeedsApproval = false
     @Published var searchOffline = false
-    private var scheduledDay = 0
+    private var locationDay = 0
+    private var lastTick = Date()
     private let lm = CLLocationManager()
     private var searchTask: Task<Void, Never>?
     private var submitPending = false
@@ -139,6 +142,8 @@ final class Model: NSObject, ObservableObject, CLLocationManagerDelegate, UNUser
             Task { @MainActor in self.picking = false; self.query = "" }
         }
         UNUserNotificationCenter.current().delegate = self
+        // Older versions queued notifications ahead of time; drop whatever this build can still reach.
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in
             Task { @MainActor in self.refreshPermissions() }
         }
@@ -156,11 +161,14 @@ final class Model: NSObject, ObservableObject, CLLocationManagerDelegate, UNUser
     }
 
     private func tick(forceLocation: Bool = false) {
+        let previous = lastTick
         now = Date()
+        lastTick = now
         refreshPermissions()
+        notifyDue(after: previous)
         let day = Calendar.current.ordinality(of: .day, in: .era, for: now) ?? 0
-        if day != scheduledDay || forceLocation {
-            scheduleNotifications()
+        if day != locationDay || forceLocation {
+            locationDay = day
             if isAuto { lm.requestLocation() }
         }
     }
@@ -183,21 +191,25 @@ final class Model: NSObject, ObservableObject, CLLocationManagerDelegate, UNUser
         loginNeedsApproval = SMAppService.mainApp.status == .requiresApproval
     }
 
-    func scheduleNotifications() {
-        let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests()
-        scheduledDay = Calendar.current.ordinality(of: .day, in: .era, for: Date()) ?? 0
+    /// Posts a notification for each prayer that started since the previous tick, for the
+    /// location that is active right now. Nothing is queued ahead in macOS, so switching city
+    /// can never leave notifications for an old location behind.
+    func notifyDue(after previous: Date) {
         guard notify else { return }
-        let upcoming = (today + prayerTimes(lat: location.lat, lng: location.lng, tz: tz, day: Date().addingTimeInterval(86400)))
-            .filter { $0.1 > Date() }
-        for (p, d) in upcoming {
+        for (p, d) in due(after: previous) {
             let c = UNMutableNotificationContent()
             c.title = "Time for \(p.rawValue)"
             c.body = "\(p.rawValue) \(fmt(d)) · \(location.name)"
             c.sound = .default
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: d.timeIntervalSinceNow, repeats: false)
-            center.add(UNNotificationRequest(identifier: "\(p.rawValue)-\(Int(d.timeIntervalSince1970))", content: c, trigger: trigger))
+            // nil trigger = show now; identifier dedupes if two ticks ever overlap
+            UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "prayer-\(Int(d.timeIntervalSince1970))", content: c, trigger: nil))
         }
+    }
+
+    /// Prayers that started in (previous, now]. Skips ones more than 5 min old (e.g. after sleep).
+    func due(after previous: Date) -> [(Prayer, Date)] {
+        let yesterday = prayerTimes(lat: location.lat, lng: location.lng, tz: tz, day: now.addingTimeInterval(-86400))
+        return (yesterday + today).filter { $0.1 > previous && $0.1 <= now && now.timeIntervalSince($0.1) < 300 }
     }
 
     // Show banner even while the menu panel is open
@@ -230,6 +242,24 @@ final class Model: NSObject, ObservableObject, CLLocationManagerDelegate, UNUser
         if searching { submitPending = true; return }
         let o = options
         if o.indices.contains(highlighted) { choose(o[highlighted]) }
+    }
+
+    func removeRecent(_ c: City) {
+        recents.removeAll { $0 == c }
+        highlighted = min(highlighted, max(0, options.count - 1))
+    }
+
+    func clearRecents() {
+        recents = []
+        highlighted = 0
+    }
+
+    /// ⌘⌫ in the search field: forget the highlighted recent city.
+    func removeHighlightedRecent() -> Bool {
+        let o = options
+        guard o.indices.contains(highlighted), case .city(let c) = o[highlighted] else { return false }
+        removeRecent(c)
+        return true
     }
 
     func moveHighlight(_ delta: Int) {
@@ -441,7 +471,10 @@ struct Panel: View {
                 .onSubmit { model.submit() }  // never capture `options` here: the closure can outlive the render
                 .onKeyPress(.downArrow) { model.moveHighlight(1); return .handled }
                 .onKeyPress(.upArrow) { model.moveHighlight(-1); return .handled }
-                .accessibilityHint("Type to filter. Arrow keys move, Return selects.")
+                .onKeyPress(.delete, phases: .down) { press in
+                    press.modifiers.contains(.command) && model.removeHighlightedRecent() ? .handled : .ignored
+                }
+                .accessibilityHint("Type to filter. Arrow keys move, Return selects, Command-Delete removes a recent city.")
                 .focused($searchFocused)
                 .onAppear { DispatchQueue.main.async { searchFocused = true } }
             ScrollViewReader { proxy in
@@ -450,6 +483,11 @@ struct Panel: View {
                         ForEach(Array(options.enumerated()), id: \.element) { i, o in
                             row(o, highlighted: i == model.highlighted).id(i)
                                 .onHover { if $0 { model.highlighted = i } }
+                        }
+                        if model.query.isEmpty && !model.recents.isEmpty {
+                            Button("Clear History") { model.clearRecents() }
+                                .buttonStyle(.link).font(.caption)
+                                .padding(.horizontal, 8).padding(.top, 6)
                         }
                         if model.query.isEmpty && model.recents.isEmpty {
                             Text("Type a city name to search worldwide.")
@@ -476,23 +514,42 @@ struct Panel: View {
         case .city(let c): (c.name, c.country, "clock.arrow.circlepath", !model.isAuto && model.location.name == c.name)
         case .remote(let c): (c.name, c.country, "globe", false)
         }
-        return Button { model.choose(o) } label: {
-            HStack {
-                Image(systemName: icon).font(.caption).frame(width: 16)
-                Text(title).lineLimit(1).layoutPriority(1)
-                Text(subtitle).lineLimit(1).foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-                if selected { Image(systemName: "checkmark").font(.caption) }
+        let recent: City? = if case .city(let c) = o { c } else { nil }
+        let label = subtitle.isEmpty ? title : "\(title), \(subtitle)"
+        return HStack(spacing: 4) {
+            Button { model.choose(o) } label: {
+                HStack {
+                    Image(systemName: icon).font(.caption).frame(width: 16)
+                    Text(title).lineLimit(1).layoutPriority(1)
+                    Text(subtitle).lineLimit(1).foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                    if selected { Image(systemName: "checkmark").font(.caption) }
+                }
+                .contentShape(Rectangle())
             }
-            .padding(.vertical, 5).padding(.horizontal, 6)
-            .background(highlighted ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 5))
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .help(label)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(label)
+            .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+            .accessibilityActions {
+                if let recent { Button("Remove from History") { model.removeRecent(recent) } }
+            }
+
+            if let recent, highlighted {
+                Button { model.removeRecent(recent) } label: {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Remove from History (⌘⌫)")
+                .accessibilityHidden(true)  // offered as an accessibility action on the row instead
+            }
         }
-        .buttonStyle(.plain)
-        .help(subtitle.isEmpty ? title : "\(title), \(subtitle)")
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(subtitle.isEmpty ? title : "\(title), \(subtitle)")
-        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+        .padding(.vertical, 5).padding(.horizontal, 6)
+        .background(highlighted ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 5))
+        .contextMenu {
+            if let recent { Button("Remove from History") { model.removeRecent(recent) } }
+        }
     }
 }
 
