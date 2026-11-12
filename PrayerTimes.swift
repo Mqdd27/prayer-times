@@ -558,6 +558,19 @@ struct Panel: View {
     }
 }
 
+// The status item centers the symbol's box, which sits ~1pt below the text's visual center.
+// Padding the bottom lifts the glyph. ponytail: fixed 1pt, tune `lift` if it drifts on other macOS versions.
+func barIcon(_ name: String, lift: CGFloat = 1) -> NSImage {
+    let sym = NSImage(systemSymbolName: name, accessibilityDescription: nil)!
+        .withSymbolConfiguration(.init(pointSize: 13, weight: .regular))!
+    let img = NSImage(size: NSSize(width: sym.size.width, height: sym.size.height + lift * 2), flipped: false) { _ in
+        sym.draw(at: NSPoint(x: 0, y: lift * 2), from: .zero, operation: .sourceOver, fraction: 1)
+        return true
+    }
+    img.isTemplate = true
+    return img
+}
+
 @main
 struct PrayerTimesApp: App {
     @StateObject private var model = Model()
@@ -568,7 +581,7 @@ struct PrayerTimesApp: App {
             Panel(model: model)
         } label: {
             let (p, d) = model.next
-            if showIcon { Image(systemName: p.icon) }
+            if showIcon { Image(nsImage: barIcon(p.icon)) }
             Text("\(p.rawValue) \(model.fmt(d))")
         }
         .menuBarExtraStyle(.window)
